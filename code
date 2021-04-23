@@ -1,0 +1,42 @@
+rm(list=ls())
+setwd("C:/Users/52595/Desktop/Dataviz")
+#install.packages("seasonal")
+library(seasonal)
+library(readxl)
+library(aTSA)
+library(astsa)
+
+#https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?sector=1&accion=consultarCuadroAnalitico&idCuadro=CA7&locale=es
+#https://www.snieg.mx/cni/escenario.aspx?idOrden=1.1&ind=6200009737&gen=603&d=n
+#https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?sector=6&accion=consultarCuadro&idCuadro=CF86&locale=es
+#https://data.bls.gov/pdq/SurveyOutputServlet
+
+
+# Datos -------------------------------------------------------------------
+
+TCMEX<-read.csv("TCMEX.csv",skip=12)
+TCMEX<-xts(TCMEX[,2],order.by=seq(as.Date("1994-01-01"),length=nrow(TCMEX),by="month"))
+TCMEX <- TCMEX[-nrow(TCMEX),]
+
+EXPUS<-read.csv("EXPUS.csv",skip=12)
+EXPUS <- xts(EXPUS[,5],order.by=seq(as.Date("1994-01-01"),length=nrow(EXPUS),by="month"))
+
+EXPM<-read.csv("EXPM.csv",skip=13)
+EXPM <- xts(EXPM[,2],order.by=seq(as.Date("1994-01-01"),length=nrow(EXPM),by="month"))
+EXPM <- na.omit(EXPM)
+  
+DEFL<-read_xlsx("DEFL.xlsx",skip=9)  
+DEFL<-DEFL[-nrow(DEFL),c(-1,-2,-3)]/100
+DEFL <- xts(DEFL,order.by=seq(as.Date("1994-01-01"),length=nrow(DEFL),by="month"))
+
+# Deflactando  ------------------------------------------------------------
+EXPM <- EXPM/DEFL
+EXPUS <- EXPUS/DEFL
+Data<-merge(TCMEX,EXPM,EXPUS)
+colnames(Data) <- c("TCMEX","EXPM","EXPUS")
+# Desestacionalizando --------------------------------------------------------
+Data <- ts(coredata(Data),frequency=12,start=c(1994,1))
+Data <- seas(as.ts(Data))
+Data <- cbind(Data$TCMEX$data[,2],Data$EXPM$data[,3],Data$EXPUS$data[,3])
+colnames(Data) <-c("TCMEX","EXPM","EXPUS") 
+plot(Data, main="Exportaciones y tipo de cambio",xlab="Año",ylab="$")
