@@ -8,6 +8,7 @@ library(xts)
 library(lubridate)
 library(hrbrthemes)
 library(ggplot2)
+library(plotly)
 
 #https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?sector=1&accion=consultarCuadroAnalitico&idCuadro=CA7&locale=es
 #https://www.snieg.mx/cni/escenario.aspx?idOrden=1.1&ind=6200009737&gen=603&d=n
@@ -38,6 +39,7 @@ Data<-cbind(Data$TCMEX$data[,2],Data$EXPUS$data[,3])
 colnames(Data) <-c("TCMEX","EXPUS") 
 Data<-as.data.frame(Data)
 
+
 # Grafica----------------------------------------------------------------
 Date<-seq(as.Date("1994-01-01"), as.Date("2021-02-01"), by="month")
 Data<-cbind(Date, Data)
@@ -58,9 +60,9 @@ viz <- ggplot(Data, aes(x=Date))+
   
   scale_y_continuous(
     
-    name = "Exchange rate between pesos and dollars", n.breaks = 14,
+    name = "Exchange rate USD to MXN (+ Depreciation)",n.breaks = 14,
     
-    sec.axis= sec_axis(~.*coeff, name="Total exports from Mexico to the US", breaks = seq(0,32000000, 3000000))
+    sec.axis= sec_axis(~.*coeff, name="Total exports from Mexico to the US (Thousand of USD)", breaks = seq(0,32000000, 3000000))
   ) +
   
   theme_ipsum()+
@@ -84,6 +86,8 @@ viz <- ggplot(Data, aes(x=Date))+
   annotate(geom="text", x=as.Date("2001-02-01"), y=15, 
            label="Asian financial crisis \nspread to the world", size= 4.5)+
   
-  ggtitle("Currency Exchange Rate and Exports to US") +
+  ggtitle("Mexican exports to US and exchange rate USD to MXN: changes in the observed pathway during crisis.") +
   scale_x_date(date_labels = "%Y-%m", date_breaks = "9 month") +
   theme(axis.text.x=element_text(angle=60, hjust=1), axis.title.x = element_text(size=14))
+
+
