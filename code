@@ -1,16 +1,14 @@
 rm(list=ls())
-setwd("C:/Users/52595/Desktop/Dataviz")
+setwd("C:/Users/52595/Desktop/CIDE 6 Semestre/Trade/Dataviz")
 library(seasonal)
 library(readxl)
-library(aTSA)
-library(astsa)
 library(xts)
 library(lubridate)
 library(hrbrthemes)
 library(ggplot2)
-
+library(plotly)
+library(scales)
 #https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?sector=1&accion=consultarCuadroAnalitico&idCuadro=CA7&locale=es
-#https://www.snieg.mx/cni/escenario.aspx?idOrden=1.1&ind=6200009737&gen=603&d=n
 #https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?sector=6&accion=consultarCuadro&idCuadro=CF86&locale=es
 #https://data.bls.gov/pdq/SurveyOutputServlet
 
@@ -21,6 +19,7 @@ TCMEX <- TCMEX[-nrow(TCMEX),]
 
 EXPUS<-read.csv("EXPUS.csv",skip=12)
 EXPUS <- xts(EXPUS[,5],order.by=seq(as.Date("1994-01-01"),length=nrow(EXPUS),by="month"))
+EXPUS <-EXPUS*(1000/1000000)
 
 DEFL<-read_xlsx("DEFL.xlsx",skip=9)  
 DEFL<-DEFL[-nrow(DEFL),c(-1,-2,-3)]/100
@@ -42,34 +41,14 @@ Data<-as.data.frame(Data)
 Date<-seq(as.Date("1994-01-01"), as.Date("2021-02-01"), by="month")
 Data<-cbind(Date, Data)
 Data<-Data[48:326,]
+rateColor <- "#A93226"
+exportColor <- "#007FC7"
 
-coeff <- as.numeric(1000000)
-rateColor <- "#E69F00"
-exportColor <- "#56B4E9"
+ggplot(Data, aes(x=Date))+
 
-options(scipen=999)
-
-viz <- ggplot(Data, aes(x=Date))+
-  geom_line( aes(y=as.numeric(`EXPUS`/ coeff)), size=1, color=exportColor)+
-  
-  geom_area( aes(x=Date, y=`EXPUS`/ coeff),alpha=0.4, fill="lightblue")+
-  
-  geom_line( aes(y=as.numeric(`TCMEX`)), size=1.5, color=rateColor) + 
-  
-  scale_y_continuous(
-    
-    name = "Exchange rate between pesos and dollars", n.breaks = 14,
-    
-    sec.axis= sec_axis(~.*coeff, name="Total exports from Mexico to the US", breaks = seq(0,32000000, 3000000))
-  ) +
-  
-  theme_ipsum()+
-  
-  theme(
-    axis.title.y = element_text(color = rateColor, size=14),
-    axis.title.y.right = element_text(color = exportColor, size=14),
-  ) + theme(panel.grid.major.x = element_blank())+ 
-  scale_x_continuous(minor_breaks = seq(0,279,9))+
+  geom_line(aes(y=EXPUS/1000), color=exportColor,size=2)+
+  geom_area(aes(y=EXPUS/1000), size=1.5,fill="#A7DEFD")+
+  geom_line(aes(y=TCMEX), color=rateColor, size=2)+
   geom_vline(aes(xintercept=10400),linetype="dashed", size=0.8)+ 
   geom_vline(aes(xintercept=10700),linetype="dashed", size=0.8)+ 
   geom_vline(aes(xintercept=14200),linetype="dashed", size=0.8)+
@@ -77,13 +56,23 @@ viz <- ggplot(Data, aes(x=Date))+
   geom_vline(aes(xintercept=18300),linetype="dashed", size=0.8)+
   geom_vline(aes(xintercept=18500),linetype="dashed", size=0.8)+
   
-  annotate(geom="text", x=as.Date("2018-02-01"), y=27, 
-           label="Global COVID-19 crisis", size= 4.5) +
-  annotate(geom="text", x=as.Date("2007-02-01"), y=20, 
-           label="Global financial crisis", size= 4.5)+
-  annotate(geom="text", x=as.Date("2001-02-01"), y=15, 
-           label="Asian financial crisis \nspread to the world", size= 4.5)+
+  scale_y_continuous( name = "Exchange rate MXN per USD",n.breaks = 14,sec.axis= sec_axis(~.*1000, name="Total exports from Mexico to the US (Billions)",breaks=seq(0,26000,2000)))+
+  scale_x_date(name="Date",date_labels = "%Y-%m", date_breaks = "9 month",limits=c(min(Data$Date),max(Data$Date)))+
+  theme_ipsum()+
+  theme(
+    panel.grid.major = element_line(colour= "#F4F7F9"), 
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    axis.title.y = element_text(color = rateColor, size=14),
+    axis.title.y.right = element_text(color = exportColor, size=14),
+    axis.text.x=element_text(angle=60, hjust=1,size=NULL), 
+    axis.title.x = element_text(size=14))+
   
-  ggtitle("Currency Exchange Rate and Exports to US") +
-  scale_x_date(date_labels = "%Y-%m", date_breaks = "9 month") +
-  theme(axis.text.x=element_text(angle=60, hjust=1), axis.title.x = element_text(size=14))
+  ggtitle("Mexican exports to US and exchange rate USD to MXN: changes in the observed pathway during crisis.")+
+  annotate(geom="text", x=as.Date("2018-02-01"), y=27,label="Global COVID-19 crisis", size= 4.5) +
+  annotate(geom="text", x=as.Date("2007-02-01"), y=20,label="Global financial crisis", size= 4.5)+
+  annotate(geom="text", x=as.Date("2001-02-01"), y=15,label="Asian financial crisis \nspread to the world", size= 4.5)+
+  labs(caption="The exports to US and the exchange rates of USD to MXN data comes from the system of economic information from Banxico. 
+                Both time series were deflacted with the Import-Export Price Index provided by the US.Bureu of Labor Statistics.
+                Additionally, the series were adjusted for seasonality with the X-13 Seasonal Adjustment Program from the U.S. Census Bureau.")
+
