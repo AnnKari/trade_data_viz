@@ -1,5 +1,6 @@
 rm(list=ls())
-setwd("C:/Users/52595/Desktop/CIDE 6 Semestre/Trade/Dataviz")
+#setwd("C:/Users/52595/Desktop/CIDE 6 Semestre/Trade/Dataviz")
+setwd("C:/Users/secun/OneDrive/Documentos/6to/International Trade/Data Visualization Project")
 library(seasonal)
 library(readxl)
 library(xts)
@@ -40,13 +41,13 @@ Data<-as.data.frame(Data)
 Date<-seq(as.Date("1994-01-01"), as.Date("2021-02-01"), by="month")
 Data<-cbind(Date, Data)
 Data<-Data[48:326,]
-rateColor <- "#A93226"
-exportColor <- "#007FC7"
+rateColor <-  "#CD6155"  
+exportColor <- "#5DADE2"  
 
 viz <- ggplot(Data, aes(x=Date))+
-
+  
   geom_line(aes(y=EXPUS/1000), color=exportColor,size=1.8)+
-  geom_area(aes(y=EXPUS/1000), size=1.5,fill="#A7DEFD", alpha=0.4)+
+  geom_area(aes(y=EXPUS/1000), size=1.5,fill="#5DADE2", alpha=0.2)+ 
   geom_line(aes(y=TCMEX), color=rateColor, size=1.8)+
   geom_vline(aes(xintercept=10400),linetype="dashed", size=0.8)+ 
   geom_vline(aes(xintercept=10700),linetype="dashed", size=0.8)+ 
@@ -76,5 +77,4 @@ viz <- ggplot(Data, aes(x=Date))+
                 Both time series were deflacted with the Import-Export Price Index provided by the US.Bureu of Labor Statistics.
                 Additionally, the series were adjusted for seasonality with the X-13 Seasonal Adjustment Program from the U.S. Census Bureau.")
 viz
-
 
